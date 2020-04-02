@@ -36,7 +36,9 @@ commands:
     steps:
       - run:
           name: Update lambdaFunction code
-          command: aws lambda update-function-code --function-name ${FUNCTION_NAME} --zip-file fileb://index.zip
+          command: |
+            aws lambda update-function-code --function-name ${FUNCTION_NAME} --zip-file fileb://index.zip
+            pwd
 
 jobs:
   build:
