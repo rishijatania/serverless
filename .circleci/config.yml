@@ -4,7 +4,7 @@ executors:
   node-image: # declares a reusable executor
     working_directory: ~/repo # directory where steps will run
     docker:
-      - image: circleci/node:11.1.0 # the primary container, where your job's commands are run
+      - image: circleci/python:3.6.1 # the primary container, where your job's commands are run
 
 commands:
   install_awscli:
@@ -16,7 +16,7 @@ commands:
             curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
             unzip awscliv2.zip
             sudo ./aws/install
-            sudo apt-get install less
+            sudo apt-get install less -y
 
   build-deployment-artifacts:
     steps:
@@ -37,8 +37,7 @@ commands:
       - run:
           name: Update lambdaFunction code
           command: |
-            aws lambda update-function-code --function-name ${FUNCTION_NAME} --zip-file fileb://index.zip
-
+            aws lambda update-function-code --function-name ${FUNCTION_NAME} --zip-file fileb://index.zip --region us-east-1
 
 jobs:
   build:
