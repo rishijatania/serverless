@@ -1,0 +1,61 @@
+version: 2.1
+
+executors:
+  node-image: # declares a reusable executor
+    working_directory: ~/repo # directory where steps will run
+    docker:
+      - image: circleci/node:11.1.0 # the primary container, where your job's commands are run
+
+commands:
+  install_awscli:
+    steps:
+      - run:
+          name: Install awscli
+          command: |
+            sudo apt update
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            sudo ./aws/install
+            sudo apt-get install less
+            sudo apt-get install jq 
+
+  build-deployment-artifacts:
+    steps:
+      - run:
+          name: Build Deployment Artifacts
+          command: |
+            zip index.zip index.js
+
+  upload-artifacts-to-storage:
+    steps:
+      - run:
+          name: Upload Build Atrifact to AWS S3
+          command: |
+            aws s3 cp index.zip s3://${S3_BUCKET_LAMBDA}/index.zip
+
+  code-deploy:
+    steps:
+      - run:
+          name: Update lambdaFunction code
+          command: |
+            aws lambda update-function-code --function-name ${FUNCTION_NAME} --zip-file fileb://index.zip
+
+jobs:
+  build:
+    executor: node-image
+    steps:
+      - checkout: # check out the code in the project directory
+          path: ~/repo
+      - install_awscli
+      - build-deployment-artifacts
+      - upload-artifacts-to-storage
+      - code-deploy
+
+workflows:
+  build_deploy:
+    jobs:
+      - build:
+          filters:
+            branches:
+              only:
+                - master
